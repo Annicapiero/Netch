@@ -22,10 +22,12 @@ As well, Netch avoid the restricted NAT problem caused by SSTap. You can use an 
 ## Sponsor
 开发不易，以下为恰饭时间
 
-[![ManSora](docs/sponsor/mansora.jpg)](https://www.mansora.net/cart.php)
-[![Across-GFW](docs/sponsor/across-gfw.jpg)](https://across-gfw.com/register?aff=4739)
+[![NyanCAT](docs/sponsor/nyancat.jpg)](https://nyancat.info)
 
-这是我所选择的服务器提供商，IPLC 专线翻墙、稳定、速度快、价格便宜。欢迎大家使用我的推广链接前去注册：[这里](https://across-gfw.com/register?aff=4739)
+NyanCAT Network，全中转高质量节点，多条低倍率节点保证流量无忧，节点极低延迟涵盖五大洲。Netflix 视频党，游戏党，海外回国党必备，无需年付，月付 19 元起
+[Telegram 群组](https://t.me/NyanCaaaat) 
+
+[![ManSora](docs/sponsor/mansora.jpg)](https://www.mansora.net/cart.php)
 
 ## Screenshots
 

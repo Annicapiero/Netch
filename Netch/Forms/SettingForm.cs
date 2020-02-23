@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Net;
 using System.Windows.Forms;
+using TaskScheduler;
 
 namespace Netch.Forms
 {
@@ -57,6 +59,8 @@ namespace Netch.Forms
             StopWhenExitedCheckBox.Checked = Global.Settings.StopWhenExited;
             StartWhenOpenedCheckBox.Checked = Global.Settings.StartWhenOpened;
             CheckUpdateWhenOpenedCheckBox.Checked = Global.Settings.CheckUpdateWhenOpened;
+            MinimizeWhenStartedCheckBox.Checked = Global.Settings.MinimizeWhenStarted;
+            RunAtStartup.Checked = Global.Settings.RunAtStartup;
 
             Socks5PortTextBox.Text = Global.Settings.Socks5LocalPort.ToString();
             HTTPPortTextBox.Text = Global.Settings.HTTPLocalPort.ToString();
@@ -72,7 +76,12 @@ namespace Netch.Forms
             ExitWhenClosedCheckBox.Text = Utils.i18N.Translate(ExitWhenClosedCheckBox.Text);
             StopWhenExitedCheckBox.Text = Utils.i18N.Translate(StopWhenExitedCheckBox.Text);
             StartWhenOpenedCheckBox.Text = Utils.i18N.Translate(StartWhenOpenedCheckBox.Text);
+            MinimizeWhenStartedCheckBox.Text = Utils.i18N.Translate(MinimizeWhenStartedCheckBox.Text);
+            RunAtStartup.Text = Utils.i18N.Translate(RunAtStartup.Text);
             CheckUpdateWhenOpenedCheckBox.Text = Utils.i18N.Translate(CheckUpdateWhenOpenedCheckBox.Text);
+            ProfileCount_Label.Text = Utils.i18N.Translate(ProfileCount_Label.Text);
+
+            ProfileCount_TextBox.Text = Global.Settings.ProfileCount.ToString();
 
             if (Global.Settings.TUNTAP.DNS.Count > 0)
             {
@@ -130,10 +139,51 @@ namespace Netch.Forms
             Global.Settings.StopWhenExited = StopWhenExitedCheckBox.Checked;
             Global.Settings.StartWhenOpened = StartWhenOpenedCheckBox.Checked;
             Global.Settings.CheckUpdateWhenOpened = CheckUpdateWhenOpenedCheckBox.Checked;
+            Global.Settings.MinimizeWhenStarted = MinimizeWhenStartedCheckBox.Checked;
+            Global.Settings.RunAtStartup = RunAtStartup.Checked;
+
+            // 开机自启判断
+            TaskSchedulerClass scheduler = new TaskSchedulerClass();
+            scheduler.Connect(null, null, null, null);
+            ITaskFolder folder = scheduler.GetFolder("\\");
+            bool taskIsExists = false;
+            try
+            {
+                folder.GetTask("Netch Startup");
+                taskIsExists = true;
+            }
+            catch (Exception) { }
+
+            if (RunAtStartup.Checked)
+            {
+                if (taskIsExists)
+                    folder.DeleteTask("Netch Startup", 0);
+
+                ITaskDefinition task = scheduler.NewTask(0);
+                task.RegistrationInfo.Author = "Netch";
+                task.RegistrationInfo.Description = "Netch run at startup.";
+                task.Principal.RunLevel = _TASK_RUNLEVEL.TASK_RUNLEVEL_HIGHEST;
+
+                task.Triggers.Create(_TASK_TRIGGER_TYPE2.TASK_TRIGGER_LOGON);
+                IExecAction action = (IExecAction)task.Actions.Create(_TASK_ACTION_TYPE.TASK_ACTION_EXEC);
+                action.Path = System.Windows.Forms.Application.ExecutablePath;
+
+
+                task.Settings.ExecutionTimeLimit = "PT0S";
+                task.Settings.DisallowStartIfOnBatteries = false;
+                task.Settings.RunOnlyIfIdle = false;
+
+                folder.RegisterTaskDefinition("Netch Startup", task, (int)_TASK_CREATION.TASK_CREATE, null, null, _TASK_LOGON_TYPE.TASK_LOGON_INTERACTIVE_TOKEN, "");
+            }
+            else
+            {
+                if (taskIsExists)
+                    folder.DeleteTask("Netch Startup", 0);
+            }
 
             try
             {
-                var Socks5Port = Int32.Parse(Socks5PortTextBox.Text);
+                var Socks5Port = int.Parse(Socks5PortTextBox.Text);
 
                 if (Socks5Port > 0 && Socks5Port < 65536)
                 {
@@ -154,7 +204,7 @@ namespace Netch.Forms
 
             try
             {
-                var HTTPPort = Int32.Parse(HTTPPortTextBox.Text);
+                var HTTPPort = int.Parse(HTTPPortTextBox.Text);
 
                 if (HTTPPort > 0 && HTTPPort < 65536)
                 {
@@ -175,7 +225,7 @@ namespace Netch.Forms
 
             try
             {
-                var RedirectorPort = Int32.Parse(RedirectorTextBox.Text);
+                var RedirectorPort = int.Parse(RedirectorTextBox.Text);
 
                 if (RedirectorPort > 0 && RedirectorPort < 65536)
                 {
@@ -226,12 +276,32 @@ namespace Netch.Forms
                 var DNS = "";
                 foreach (var ip in Global.Settings.TUNTAP.DNS)
                 {
-                    DNS += ip.ToString();
+                    DNS += ip;
                     DNS += ',';
                 }
                 DNS = DNS.Trim();
                 TUNTAPDNSTextBox.Text = DNS.Substring(0, DNS.Length - 1);
                 TUNTAPUseCustomDNSCheckBox.Checked = Global.Settings.TUNTAP.UseCustomDNS;
+
+                return;
+            }
+            try
+            {
+                var ProfileCount = int.Parse(ProfileCount_TextBox.Text);
+
+                if (ProfileCount>0)
+                {
+                    Global.Settings.ProfileCount = ProfileCount;
+                }
+                else
+                {
+                    throw new FormatException();
+                }
+            }
+            catch (FormatException)
+            {
+                ProfileCount_TextBox.Text = Global.Settings.ProfileCount.ToString();
+                MessageBox.Show(Utils.i18N.Translate("ProfileCount value illegal. Try again."), Utils.i18N.Translate("Information"), MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 return;
             }
